@@ -1,8 +1,8 @@
-
 #include <iostream>
 #include <string>
 #ifdef _WIN32
 #include <conio.h>
+#include <windows.h>
 #endif
 
 using namespace std;
@@ -65,7 +65,7 @@ int chooseDifficulty() {
     return diff;
 }
 
-// lane generator (static for now)
+// lane generator (moving now)
 string generateTerrain(char laneType) {
     string lane(42, ' ');
 
@@ -150,6 +150,38 @@ string generateTerrain(char laneType) {
 
 ///////////////////////////////////// core game functions
 
+// shifts inner string left, wrapping around
+void shiftLeft(string& lane) {
+    char first = lane[1];
+    for (int i = 1; i < 40; i++) lane[i] = lane[i + 1];
+    lane[40] = first;
+}
+
+// shifts inner string right, wrapping around
+void shiftRight(string& lane) {
+    char last = lane[40];
+    for (int i = 40; i > 1; i--) lane[i] = lane[i - 1];
+    lane[1] = last;
+}
+
+// apply shift to specific lanes based on the map
+void shiftObstacles(NodePtr head) {
+    NodePtr curr = head;
+    int row = 0;
+    while(curr != NULL) {
+        // odd roads and rivers - move right
+        if(row == 1 || row == 3 || row == 5 || row == 7 || row == 11 || row == 13 || row == 16) {
+            shiftRight(curr->data);
+        } 
+        // even roads and rivers - move left
+        else if(row == 2 || row == 4 || row == 8 || row == 10 || row == 12 || row == 14 || row == 17) {
+            shiftLeft(curr->data);
+        }
+        curr = curr->next;
+        row++;
+    }
+}
+
 NodePtr buildRoad() {
     NodePtr head = NULL;
     NodePtr tail = NULL;
@@ -210,7 +242,7 @@ void displayRoad(NodePtr head, string playerName, int playerX, int playerY) {
     }
 }
 
-// pevent memory leaks
+// prevent memory leaks
 void freeList(NodePtr head) {
     NodePtr temp;
     while (head != NULL) {
@@ -224,13 +256,19 @@ void freeList(NodePtr head) {
 /////////////////////////////////// MAIN LOOP
 
 int main() {
+    // seed random generator for randomness
+    srand(time(0)); 
+    
     showTitleScreen();
     string pName = getPlayerName();
     int difficulty = chooseDifficulty();
 
-    // player pos
+    // player pos 
     int playerX = 20; 
-    int playerY = 20; 
+    int playerY = 19; 
+
+    // set speed based on difficulty choice
+    int gameSpeed = (difficulty == 1) ? 180 : 100;
 
     // generate linked list map
     NodePtr roadList = buildRoad();
@@ -239,33 +277,42 @@ int main() {
 
     // main game loop
     while (isPlaying) {
+        
+        // shift the map elements first
+        shiftObstacles(roadList);
+        
         clearScreen();
         displayRoad(roadList, pName, playerX, playerY);
         
         #ifdef _WIN32
-        int ch = _getch();
-        if (ch == 224) {
-            ch = _getch();
-            switch(ch) {
-                case 72: // UP 
-                    if (playerY > 0) playerY--;
-                    break;
-                case 80: // DOWN 
-                    if (playerY < 19) playerY++;
-                    break;
-                case 75: // LEFT
-                    if (playerX > 1) playerX--;
-                    break;
-                case 77: // RIGHT
-                    if (playerX < 40) playerX++;
-                    break;
+        if (_kbhit()) {
+            int ch = _getch();
+            if (ch == 224) {
+                ch = _getch();
+                switch(ch) {
+                    case 72: // UP 
+                        if (playerY > 0) playerY--;
+                        break;
+                    case 80: // DOWN 
+                        if (playerY < 19) playerY++;
+                        break;
+                    case 75: // LEFT
+                        if (playerX > 1) playerX--;
+                        break;
+                    case 77: // RIGHT
+                        if (playerX < 40) playerX++;
+                        break;
+                }
+            } else if (ch == 'q' || ch == 'Q') {
+                isPlaying = false; 
+                // q to quit
             }
-        } else if (ch == 'q' || ch == 'Q') {
-            isPlaying = false; 
-            // q to quit
         }
+        // pause loop to control game speed
+        Sleep(gameSpeed);
         #endif
     }
+    
     freeList(roadList);
     roadList = NULL;
 
