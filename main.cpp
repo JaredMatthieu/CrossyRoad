@@ -16,11 +16,19 @@ struct Node {
 };
 typedef Node* NodePtr;
 
+struct Inputs {
+    int CPPUp;
+    int CPPDown;
+    int CPPLeft;
+    int CPPRight;
+};
+
 void clearScreen() {
     #ifdef _WIN32
-        system("cls");   
+        COORD coord = {0, 0};
+        SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), coord);
     #else
-        system("clear"); 
+        cout << "\033[H";  // moves cursor to top-left without clearing
     #endif
 }
 
@@ -220,19 +228,16 @@ void displayRoad(NodePtr head, string playerName, int playerX, int playerY, int 
     NodePtr curr = head;
     int row = 0;
     
-    cout << "---------- Road Crossing Challenge ----------" << endl;
-    cout << "Player: " << playerName << " | Lives: " << lives << " | Crossings: " << score   << endl;
+    cout << "---------- Road Crossing Challenge ----------\n";
+    cout << "Player: " << playerName << " | Lives: " << lives << " | Crossings: " << score << "\n";
     while (curr != NULL) {
         string rowData = curr->data;
-        
-        if (row == playerY) {
-            rowData[playerX] = 'P';
-        }
-        
-        cout << rowData << endl;
+        if (row == playerY) rowData[playerX] = 'P';
+        cout << rowData << "\n";
         curr = curr->next;
         row++;
     }
+    cout.flush(); // flush ONCE at the end
 }
 
 // pevent memory leaks
@@ -301,16 +306,16 @@ void shiftObstacles(NodePtr head) {
 
 //check collision and drowned function
 
-bool checkCollision(NodePtr head, int playerX, int playerY) {
+bool checkCollision(int playerX, int playerY, NodePtr laneCache[20]) {
     if (ZONE_MAP[playerY] != 'R') return false; // only check for trucks in road zones
-    NodePtr lane = getLane(head, playerY);
+    NodePtr lane = laneCache[playerY];
     if (lane == NULL) return false; // safety check
     return (lane->data[playerX] == '#'); // collision if player is on a truck
 }
 
-bool checkDrowned(NodePtr head, int playerX, int playerY) {
+bool checkDrowned(int playerX, int playerY, NodePtr laneCache[20]) {
     if (ZONE_MAP[playerY] != 'V') return false; // only check for logs in river zones
-    NodePtr lane = getLane(head, playerY);
+    NodePtr lane = laneCache[playerY];
     if (lane == NULL) return false; // safety check
     return (lane->data[playerX] == '~'); //return true if player is in water without a log (drowned)
 }
@@ -393,7 +398,7 @@ void showGameOver(bool won, const string& playerName, int score) {
 
     showLeaderboard();
 
-    cout << "Press ENTER to return to the title screen..." << endl;
+    cout << "Press ENTER to return to the title screen..." << endl; 
     cin.ignore();
     cin.get();
 }
@@ -403,6 +408,21 @@ void showGameOver(bool won, const string& playerName, int score) {
 //gameover/win endd
 
 
+//Player Movement and Control : Flores
+int keyboardInput (int input, int& playerX, int& playerY){
+    if (_kbhit()) {
+        input = _getch();
+        switch (input) {
+            case 72: if (playerY > 0)  playerY--; break;  // UP
+            case 80: if (playerY < 19) playerY++; break;  // DOWN
+            case 75: if (playerX > 1)  playerX--; break;  // LEFT
+            case 77: if (playerX < 40) playerX++; break;  // RIGHT
+        }
+        return 1;
+    }
+    return -1;
+}
+
 
 /////////////////////////////////// MAIN LOOP
 
@@ -410,15 +430,19 @@ int main() {
     showTitleScreen();
     string pName = getPlayerName();
     int difficulty = chooseDifficulty();
-
+    const Inputs kbInputs = {72,80,75,77};
     // player pos
     int playerX = 20; 
     int playerY = 19; 
     int lives = 3; // added to track player lives
     int score = 0; // added to track successful crossings
+    int input;
 
     // generate linked list map
     NodePtr roadList = buildRoad();
+    NodePtr laneCache[20];
+    
+    
 
     bool isPlaying = true;
     bool playerWon = false; //added to track win condition
@@ -426,9 +450,10 @@ int main() {
     int gameSpeed = (difficulty == 2) ? 100 : 180; // set game speed based on difficulty
     // main game loops
     while (isPlaying) {
-
+        NodePtr curr = roadList;
         //shift obstacles every tick
         shiftObstacles(roadList);
+        for (int i = 0; i < 20; i++, curr = curr->next) laneCache[i] = curr;
 
         clearScreen();
         displayRoad(roadList, pName, playerX, playerY, lives, score);
@@ -456,40 +481,25 @@ int main() {
     }
 
     //collision: truck hit
-    if (checkCollision(roadList, playerX, playerY)) {
+    if (checkCollision(playerX, playerY, laneCache)) {
         lives--; // lose a life if hit by a truck
         playerX = 20; // reset player to starting position
         playerY = 19; // reset player to starting position  
     }
 
     //collision: drowned
-    if (checkDrowned(roadList, playerX, playerY)) { 
+    if (checkDrowned(playerX, playerY, laneCache)) { 
         lives--; // lose a life if drowned
         playerX = 20; // reset player to starting position  
         playerY = 19; // reset player to starting position
     }
 
+    keyboardInput(input, playerX, playerY);
 
-#ifdef _WIN32
-    // Non-blocking input check
-    if (_kbhit()) {
-        int ch = _getch();
-        if (ch == 224) {
-            ch = _getch();
-            switch (ch) {
-                case 72: if (playerY > 0)  playerY--; break;  // UP
-                case 80: if (playerY < 19) playerY++; break;  // DOWN
-                case 75: if (playerX > 1)  playerX--; break;  // LEFT
-                case 77: if (playerX < 40) playerX++; break;  // RIGHT
-            }
-        } else if (ch == 'q' || ch == 'Q') {
-            isPlaying = false;
-        }
-    }
+    Sleep(300);   // controls animation speed
+    
 
-    Sleep(gameSpeed);   // controls animation speed
-    #endif
-}
+    }   
 
     //show game over/win screen
     showGameOver(playerWon, pName, score);
@@ -498,4 +508,5 @@ int main() {
     roadList = NULL;
 
     return 0;
+    
 }
