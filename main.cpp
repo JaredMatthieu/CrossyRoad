@@ -23,12 +23,20 @@ struct Inputs {
     int CPPRight;
 };
 
-void clearScreen() {
+void setCursorStart() { //Flores: Uses cursor placement instead of clearing to try and improve performance
     #ifdef _WIN32
         COORD coord = {0, 0};
         SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), coord);
     #else
         cout << "\033[H";  // moves cursor to top-left without clearing
+    #endif
+}
+
+void clearScreen() {
+    #ifdef _WIN32
+        system("cls");        
+    #else
+        system("clear");
     #endif
 }
 
@@ -72,6 +80,7 @@ int chooseDifficulty() {
     cout << "2. Hard  — speed: 100ms, 3 trucks/logs per lane" << endl << endl;
     cout << "Enter choice (1 or 2): ";
     cin >> diff;
+    clearScreen();
     return diff;
 }
 
@@ -88,7 +97,7 @@ string generateTerrain(char laneType) {
         }
     }
 
-    else if(laneType == 'B' || laneType == 'S'){
+    else if(laneType == 'B'){
 
         for(int i = 1; i <= 40; i++){
             lane[i] = '.';
@@ -409,9 +418,12 @@ void showGameOver(bool won, const string& playerName, int score) {
 
 
 //Player Movement and Control : Flores
-int keyboardInput (int input, int& playerX, int& playerY){
+int keyboardInput(int input, int& playerX, int& playerY) {
     if (_kbhit()) {
         input = _getch();
+        if (input == 0xE0 || input == 0) { 
+            input = _getch();              
+        }
         switch (input) {
             case 72: if (playerY > 0)  playerY--; break;  // UP
             case 80: if (playerY < 19) playerY++; break;  // DOWN
@@ -421,6 +433,24 @@ int keyboardInput (int input, int& playerX, int& playerY){
         return 1;
     }
     return -1;
+}
+
+void shiftLogPlayer(int& playerX, int& playerY, NodePtr laneCache[20]) { //Flores
+    if (ZONE_MAP[playerY] != 'V') return;  //Checks if the current zone is a river zone, if not, no need to check for log movement
+    NodePtr lane = laneCache[playerY]; //accesses the current lane using the cache for efficiency
+    if (lane == NULL) return; 
+    
+    if (lane->data[playerX] == '=') {
+        int riverNum = 0;
+        for (int i = 0; i <= playerY; i++) { // counts how many river zones have been passed to determine log movement direction
+            if (ZONE_MAP[i] == 'V') riverNum++;
+        }
+        if (riverNum % 2 == 1) {
+            if (playerX < 40) playerX++;
+        } else {
+            if (playerX > 1) playerX--;
+        }
+    }
 }
 
 
@@ -453,9 +483,10 @@ int main() {
         NodePtr curr = roadList;
         //shift obstacles every tick
         shiftObstacles(roadList);
-        for (int i = 0; i < 20; i++, curr = curr->next) laneCache[i] = curr;
-
-        clearScreen();
+        for (int i = 0; i < 20; i++, curr = curr->next) laneCache[i] = curr; //Caches the lane to avoid traversing the linked list multiple times for collision checks and display
+        shiftLogPlayer(playerX, playerY, laneCache); 
+        
+        setCursorStart();
         displayRoad(roadList, pName, playerX, playerY, lives, score);
         
             //check win condition before starting the game loop
@@ -475,7 +506,7 @@ int main() {
     //check if player reached the finish line (row 0)
     if (playerY == 0) {
         score++; //increment score for successful crossing
-        playerY = 19; //reset player to starting position
+        playerX = 20, playerY = 19; //reset player to starting position
         freeList(roadList); //free old road
         roadList = buildRoad(); //generate new road
     }
@@ -494,11 +525,12 @@ int main() {
         playerY = 19; // reset player to starting position
     }
 
-    keyboardInput(input, playerX, playerY);
-
-    Sleep(300);   // controls animation speed
-    
-
+    int elapsed = 0;
+    while (elapsed < gameSpeed) { //Flores:
+        if (_kbhit()) keyboardInput(input, playerX, playerY);
+        Sleep(10);
+        elapsed += 10;
+        }
     }   
 
     //show game over/win screen
