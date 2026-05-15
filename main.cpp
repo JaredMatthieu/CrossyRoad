@@ -81,7 +81,7 @@ void showTitleScreen() {
     cout << BOLD << FG_BRIGHT_GREEN << " _____ _____ _____ ____     _____ _____ _____ _____ _____ _____ _____ _____ " << RESET << "\n";
     cout << BOLD << FG_BRIGHT_GREEN << "| __  |     |  _  |    \\   |     | __  |     |   __|   __|     |   | |   __|" << RESET << "\n";
     cout << BOLD << FG_BRIGHT_GREEN << "|    -|  |  |     |  |  |  |   --|    -|  |  |__   |__   |-   -| | | |  |  |" << RESET << "\n";
-    cout << BOLD << FG_BRIGHT_GREEN << "|__|__|_____|__|__|____/   |_____|__|__|_____|_____|_____|_____|_|___|_____|" << RESET << "\n";
+    cout << BOLD << FG_BRIGHT_GREEN << "|__|__|_____|__|__|____/   |_____|__|__|_____|_____|_____|_____|_|___|_____|" << RESET << "\n"; //changes
 
     cout << "\n";
     println("                        ~ C H A L L E N G E ~", FG_BRIGHT_YELLOW, true);
