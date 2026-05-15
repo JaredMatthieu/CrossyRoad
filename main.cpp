@@ -1,4 +1,3 @@
-
 #include <iostream>
 #include <string>
 #include <vector>
@@ -157,6 +156,20 @@ int chooseDifficulty() {
     cout << "\n";
 
     return diff;
+}
+
+//player menu
+void showPlayerMenu(const string& name, int diff) {
+    clearScreen();
+    cout << "\n";
+    println("  PLAYER MENU", FG_BRIGHT_GREEN, true);
+    cout << "\n";
+    println("  Player    : " + name, FG_WHITE);
+    println("  Difficulty: " + string(diff == 1 ? "Easy (180ms, 2 obstacles)" : "Hard (100ms, 3 obstacles)"), FG_WHITE);
+    cout << "\n";
+    println("  Press ENTER to start the game!", FG_BRIGHT_GREEN, true);
+    cout << "\n";
+    cin.get();
 }
 
 // lane generator (static for now)
@@ -452,15 +465,15 @@ void showLeaderboard() {
     }
 
     cout << endl;
-    cout << " ===== LEADERBOARD (Top 5) =====" << endl;
+    cout << FG_BRIGHT_YELLOW << " ===== LEADERBOARD (Top 5) =====" << RESET << endl;
     int display = (count < 5) ? count : 5;
     for (int i = 0; i < display; i++) {
-        cout << "  " << (i + 1) << ". "
-            << entries[i].name << " — "
-            << entries[i].score << " crossing(s)" << endl;
+        cout << FG_BRIGHT_CYAN << "  " << (i + 1) << ". " << RESET
+            << FG_BRIGHT_WHITE << entries[i].name << RESET
+            << FG_BRIGHT_GREEN << " — " << entries[i].score << " crossing(s)" << RESET << endl;
     }
-    if (count == 0) cout << "  (No scores yet.)" << endl;
-    cout << " ================================" << endl;
+    if (count == 0) cout << FG_BRIGHT_WHITE << "  (No scores yet.)" << RESET << endl;
+    cout << FG_BRIGHT_YELLOW << " ================================" << RESET << endl;
 }
 
 // leaderboard end below on how and where to call
@@ -472,9 +485,9 @@ void showLeaderboard() {
 void showGameOver(bool won, const string& playerName, int score) {
     clearScreen();
     if (won) {
-        cout << "Congratulations " << playerName << "! You crossed 5 times!" << endl;
+        cout << FG_BRIGHT_GREEN << "Congratulations " << FG_BRIGHT_WHITE << playerName << FG_BRIGHT_GREEN << "! You crossed 5 times!" << RESET << endl;
     } else {
-        cout << "Game Over, " << playerName << "! You were hit too many times." << endl;
+        cout << FG_BRIGHT_RED << "Game Over, " << FG_BRIGHT_WHITE << playerName << FG_BRIGHT_RED << "! You were hit too many times." << RESET << endl;
     }
 
     //saves to the leaderboard and shows it
@@ -482,7 +495,7 @@ void showGameOver(bool won, const string& playerName, int score) {
 
     showLeaderboard();
 
-    cout << "Press ENTER to return to the title screen..." << endl; 
+    cout << FG_BRIGHT_CYAN << "Press ENTER to return to the title screen..." << RESET << endl;
     cin.ignore();
     cin.get();
 }
@@ -538,17 +551,7 @@ int main() {
     
     int diff = chooseDifficulty();
 
-    clearScreen();
-    cout << "\n";
-    println("  PLAYER MENU", FG_BRIGHT_GREEN, true);
-    cout << "\n";
-    println("  Player    : " + name, FG_WHITE);
-    println("  Difficulty: " + string(diff == 1 ? "Easy (180ms, 2 obstacles)" : "Hard (100ms, 3 obstacles)"), FG_WHITE);
-    cout << "\n";
-    println("  Press ENTER to start the game!", FG_BRIGHT_GREEN, true);
-    cout << "\n";
-
-    cin.get();
+    showPlayerMenu(name, diff);
     
     // player pos
     int playerX = 20; 
