@@ -1,6 +1,7 @@
 
 #include <iostream>
 #include <string>
+#include <vector>
 #include <fstream>
 #ifdef _WIN32
 #include <conio.h>
@@ -8,6 +9,24 @@
 #endif
 
 using namespace std;
+
+// color codes
+#define RESET            "\033[0m"
+#define BOLD             "\033[1m"
+#define FG_RED           "\033[31m"
+#define FG_GREEN         "\033[32m"
+#define FG_YELLOW        "\033[33m"
+#define FG_BLUE          "\033[34m"
+#define FG_CYAN          "\033[36m"
+#define FG_WHITE         "\033[37m"
+#define FG_BRIGHT_WHITE  "\033[97m"
+#define FG_BRIGHT_GREEN  "\033[92m"
+#define FG_BRIGHT_CYAN   "\033[96m"
+#define FG_BRIGHT_RED    "\033[91m"
+#define FG_BRIGHT_YELLOW "\033[93m"
+#define BG_GREEN         "\033[42m"
+#define BG_RED           "\033[41m"
+#define FG_BLACK         "\033[30m"
 
 // node
 struct Node {
@@ -24,46 +43,103 @@ void clearScreen() {
     #endif
 }
 
+void sleepMs(int ms) {
+#ifdef _WIN32
+    Sleep(ms);
+#else
+    usleep(ms * 1000);
+#endif
+}
+
+// colored line ---
+void println(const string& text, const string& color = FG_WHITE, bool bold = false) {
+    if (bold) cout << BOLD;
+    cout << color << text << RESET << "\n";
+}
+
 // UI functions
 
 void showTitleScreen() {
-    cout << " _                 _         _                   _" << endl;
-    cout << "|  _ \\ _   _ _  _| |  / ___| _ _  _ _() _   _ _" << endl;
-    cout << "| |_) / _ \\ / _ |/ _ | | |   | '_/ _ \\/ __/ __| | ' \\ / _` |" << endl;
-    cout << "|  _ < () | (| | (_| | | |___| | | () \\_ \\__ \\ | | | | (_| |" << endl;
-    cout << "|_| \\_\\___/ \\__,_|\\__,_|  \\____|_|  \\___/|___/___/_|_| |_|\\__, |" << endl;
-    cout << "              C h a l l e n g e                        |___/" << endl << endl;
-    cout << "Written for CSDC102 | Language: C++" << endl << endl;
-    cout << "HOW TO PLAY:" << endl;
-    cout << "- Move with Arrow Keys" << endl;
-    cout << "- Dodge trucks (#####) in the ROAD ZONE" << endl;
-    cout << "- Hop on logs (====) in the RIVER ZONE" << endl;
-    cout << "- Reach the finish line 5 times to win!" << endl << endl;
-    cout << "Press ENTER to start..." << endl;
-    
+    clearScreen();
+    cout << "\n";
+
+    cout << BOLD << FG_BRIGHT_GREEN << " _____ _____ _____ ____     _____ _____ _____ _____ _____ _____ _____ _____ " << RESET << "\n";
+    cout << BOLD << FG_BRIGHT_GREEN << "| __  |     |  _  |    \\   |     | __  |     |   __|   __|     |   | |   __|" << RESET << "\n";
+    cout << BOLD << FG_BRIGHT_GREEN << "|    -|  |  |     |  |  |  |   --|    -|  |  |__   |__   |-   -| | | |  |  |" << RESET << "\n";
+    cout << BOLD << FG_BRIGHT_GREEN << "|__|__|_____|__|__|____/   |_____|__|__|_____|_____|_____|_____|_|___|_____|" << RESET << "\n";
+
+    cout << "\n";
+    println("                        ~ C H A L L E N G E ~", FG_BRIGHT_YELLOW, true);
+    println("                      CSDC102  |  Language: C++", FG_BRIGHT_CYAN);
+    cout << "\n";
+    println("              HOW TO PLAY", FG_BRIGHT_WHITE, true);
+    cout << "\n";
+    println("              [ < ^ v > ]   Move with Arrow Keys",                  FG_BRIGHT_CYAN);
+    println("              [  #####  ]   Dodge trucks in the ROAD ZONE",         FG_BRIGHT_RED);
+    println("              [  =====  ]   Hop on logs in the RIVER ZONE",         FG_BLUE);
+    println("              [    5x   ]   Reach the finish line 5 times to win!", FG_BRIGHT_YELLOW);
+    cout << "\n";
+    println("                Press ENTER to start...", FG_BRIGHT_GREEN, true);
+    cout << "\n";
+
     cin.get();
 }
     
 // get player name
 string getPlayerName() {
-    string name;
     clearScreen();
-    
-    cout << "Enter player name: ";
+    cout << "\n";
+    println("  PLAYER SETUP", FG_BRIGHT_YELLOW, true);
+    cout << "\n";
+    cout << FG_CYAN << "  ---------------------------------------------------------------------" << RESET << "\n";
+    cout << "\n";
+    println("  What is your name?", FG_WHITE);
+    cout << "\n";
+    cout << "  " << FG_BRIGHT_GREEN << BOLD << ">> " << RESET;
+
+    string name;
     getline(cin, name);
+    if (name.empty()) name = "Player";
+
+    cout << "\n";
+    println("  Welcome,  " + name + "!", FG_BRIGHT_CYAN, true);
+    cout << "\n";
+
     return name;
 }
 
 // difficulty
 int chooseDifficulty() {
-    int diff;
     clearScreen();
-    
-    cout << "SELECT DIFFICULTY" << endl;
-    cout << "1. Easy  — speed: 180ms, 2 trucks/logs per lane" << endl;
-    cout << "2. Hard  — speed: 100ms, 3 trucks/logs per lane" << endl << endl;
-    cout << "Enter choice (1 or 2): ";
+    cout << "\n";
+    println("  SELECT DIFFICULTY", FG_BRIGHT_YELLOW, true);
+    cout << "\n";
+    cout << FG_CYAN << "  ---------------------------------------------------------------------" << RESET << "\n";
+    cout << "\n";
+
+    cout << "  " << BG_GREEN << FG_BLACK << BOLD << " 1 " << RESET;
+    cout << "  " << FG_BRIGHT_GREEN << BOLD << "EASY  " << RESET;
+    cout << FG_WHITE << "Speed: 180ms  |  2 trucks/logs per lane" << RESET << "\n";
+    cout << "\n";
+    cout << "  " << BG_RED << FG_BLACK << BOLD << " 2 " << RESET;
+    cout << "  " << FG_BRIGHT_RED << BOLD << "HARD  " << RESET;
+    cout << FG_WHITE << "Speed: 100ms  |  3 trucks/logs per lane" << RESET << "\n";
+    cout << "\n";
+    cout << FG_CYAN << "  ---------------------------------------------------------------------" << RESET << "\n";
+    cout << "\n";
+    cout << "  " << FG_BRIGHT_GREEN << BOLD << ">> Enter choice (1 or 2): " << RESET;
+
+    int diff = 1;
     cin >> diff;
+    cin.ignore();
+    if (diff != 1 && diff != 2) diff = 1;
+
+    cout << "\n";
+    string label  = (diff == 1) ? "EASY" : "HARD";
+    string lcolor = (diff == 1) ? FG_BRIGHT_GREEN : FG_BRIGHT_RED;
+    println("  Selected: " + label, lcolor, true);
+    cout << "\n";
+
     return diff;
 }
 
@@ -408,9 +484,23 @@ void showGameOver(bool won, const string& playerName, int score) {
 
 int main() {
     showTitleScreen();
-    string pName = getPlayerName();
-    int difficulty = chooseDifficulty();
+    
+    string name = getPlayerName();
+    
+    int diff = chooseDifficulty();
 
+    clearScreen();
+    cout << "\n";
+    println("  PLAYER MENU", FG_BRIGHT_GREEN, true);
+    cout << "\n";
+    println("  Player    : " + name, FG_WHITE);
+    println("  Difficulty: " + string(diff == 1 ? "Easy (180ms, 2 obstacles)" : "Hard (100ms, 3 obstacles)"), FG_WHITE);
+    cout << "\n";
+    println("  Press ENTER to start the game!", FG_BRIGHT_GREEN, true);
+    cout << "\n";
+
+    cin.get();
+    
     // player pos
     int playerX = 20; 
     int playerY = 19; 
