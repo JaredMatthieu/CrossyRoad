@@ -576,7 +576,7 @@ int main() {
         shiftLogPlayer(playerX, playerY, laneCache); 
         
         setCursorStart();
-        displayRoad(roadList, pName, playerX, playerY, lives, score);
+        displayRoad(roadList, name, playerX, playerY, lives, score);
         
             //check win condition before starting the game loop
     if (score >= 5) {
