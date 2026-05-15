@@ -513,7 +513,7 @@ int main() {
     bool isPlaying = true;
     bool playerWon = false; //added to track win condition
 
-    int gameSpeed = (difficulty == 2) ? 100 : 180; // set game speed based on difficulty
+    int gameSpeed = (diff == 2) ? 100 : 180; // set game speed based on difficulty
     // main game loops
     while (isPlaying) {
 
@@ -521,7 +521,7 @@ int main() {
         shiftObstacles(roadList);
 
         clearScreen();
-        displayRoad(roadList, pName, playerX, playerY, lives, score);
+        displayRoad(roadList, name, playerX, playerY, lives, score);
         
             //check win condition before starting the game loop
     if (score >= 5) {
@@ -582,7 +582,7 @@ int main() {
 }
 
     //show game over/win screen
-    showGameOver(playerWon, pName, score);
+    showGameOver(playerWon, name, score);
 
     freeList(roadList);
     roadList = NULL;
